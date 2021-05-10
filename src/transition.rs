@@ -5,7 +5,7 @@ use std::fmt::{self, Display};
 #[derive(Debug)]
 pub struct Transition {
     /// First action corresponds to the action executed when a 0 is read.
-    /// Second action corresponds to the action exectued when a 1 is read.
+    /// Second action corresponds to the action executed when a 1 is read.
     actions: [Action; 2],
 }
 
@@ -22,7 +22,7 @@ impl Transition {
     /// Returns the action corresponding to the given symbol
     #[inline]
     #[must_use]
-    pub fn action_of(&self, symbol: u8) -> (u8, Direction, State) {
+    pub fn get_action_of(&self, symbol: u8) -> (u8, Direction, State) {
         self.actions[symbol as usize].unpack()
     }
 }
@@ -31,6 +31,35 @@ impl Display for Transition {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{} {}", self.actions[0], self.actions[1])
+    }
+}
+
+/// Container for partially specified actions
+#[repr(transparent)]
+#[derive(Debug, Default)]
+pub struct PartialTransition {
+    actions: [Option<Action>; 2],
+}
+
+impl PartialTransition {
+    /// Creates a new partial transition
+    #[inline]
+    #[must_use]
+    pub const fn new(action_on_0: Option<Action>, action_on_1: Option<Action>) -> Self {
+        Self {
+            actions: [action_on_0, action_on_1],
+        }
+    }
+
+    #[inline]
+    pub fn set_action_of(&mut self, symbol: u8, action: Option<Action>) {
+        self.actions[symbol as usize] = action;
+    }
+
+    #[inline]
+    #[must_use]
+    pub fn get_action_of(&self, symbol: u8) -> Option<(u8, Direction, State)> {
+        self.actions[symbol as usize].as_ref().map(|a| a.unpack())
     }
 }
 
@@ -159,4 +188,3 @@ impl From<u8> for State {
         }
     }
 }
-
