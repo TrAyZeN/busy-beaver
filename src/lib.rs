@@ -8,12 +8,14 @@
     clippy::nursery,
     clippy::cargo
 )]
-
 #![allow(clippy::inline_always)]
+
+pub mod turing_machine;
 
 /// Tape for binary alphabet Turing machine
 pub mod tape;
 
 pub mod transition;
-pub mod turing_machine;
+
+/// Some utils functions
 pub mod utils;

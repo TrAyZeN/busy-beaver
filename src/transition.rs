@@ -38,6 +38,16 @@ impl Display for Transition {
     }
 }
 
+impl From<PartialTransition> for Transition {
+    #[inline]
+    fn from(transition: PartialTransition) -> Self {
+        Self::new(
+            transition.actions[0].unwrap_or(Action::new(0, Direction::Right, State::Halt)),
+            transition.actions[1].unwrap_or(Action::new(1, Direction::Right, State::Halt)),
+        )
+    }
+}
+
 /// Container for partially specified actions.
 #[repr(transparent)]
 #[derive(Debug, Default, Copy, Clone)]
@@ -67,6 +77,40 @@ impl PartialTransition {
     pub fn get_action_of(self, symbol: u8) -> Option<(u8, Direction, State)> {
         self.actions[symbol as usize].map(Action::unpack)
     }
+
+    /// Counts the number of specified actions.
+    #[inline]
+    #[must_use]
+    pub fn count_specified_actions(self) -> usize {
+        let mut c = 0;
+
+        if self.actions[0].is_some() {
+            c += 1;
+        }
+
+        if self.actions[1].is_some() {
+            c += 1;
+        }
+
+        c
+    }
+}
+
+impl Display for PartialTransition {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if let Some(a) = self.actions[0] {
+            write!(f, "{}", a)
+        } else {
+            write!(f, "---")
+        }?;
+
+        if let Some(a) = self.actions[1] {
+            write!(f, " {}", a)
+        } else {
+            write!(f, " ---")
+        }
+    }
 }
 
 /// Encoded action to perform on a transition.
@@ -95,13 +139,20 @@ impl Action {
         }
     }
 
+    /// Returns the direction in which to move the head.
+    #[inline]
+    #[must_use]
+    pub fn get_direction(self) -> Direction {
+        Direction::from(self.representation >> 1 & 1)
+    }
+
     /// Unpacks the representation to return corresponding symbol to write, direction and state.
     #[inline]
     #[must_use]
     fn unpack(self) -> (u8, Direction, State) {
         (
             self.representation & 1,
-            Direction::from(self.representation >> 1 & 1),
+            self.get_direction(),
             State::from(self.representation >> 2),
         )
     }
