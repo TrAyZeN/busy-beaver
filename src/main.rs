@@ -1,9 +1,5 @@
-mod tape;
-mod transition;
-mod turing_machine;
-
-use transition::{Action, Direction, State, Transition};
-use turing_machine::TuringMachine;
+use busy_beaver::transition::{Action, Direction, State, Transition};
+use busy_beaver::turing_machine::TuringMachine;
 
 fn main() {
     let tm = TuringMachine::new([
