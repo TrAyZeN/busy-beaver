@@ -1,6 +1,6 @@
+use rand::{thread_rng, Rng};
 use std::fmt::{self, Display};
 use std::ops::RangeInclusive;
-use rand::{thread_rng, Rng};
 
 use crate::utils::map_range_inclusive;
 
@@ -145,7 +145,7 @@ impl Direction {
 
     /// Returns the string representation of the direction.
     #[inline]
-    const fn to_str(&self) -> &str {
+    const fn to_str(self) -> &'static str {
         match self {
             Self::Left => "Left",
             Self::Right => "Right",
@@ -212,9 +212,16 @@ impl State {
         Self::from(rng.gen_range(map_range_inclusive(range, |s| s as u8)))
     }
 
+    /// Checks if the state is halting.
+    #[inline(always)]
+    #[must_use]
+    pub fn is_halting(self) -> bool {
+        self == Self::Halt
+    }
+
     /// Returns the string representation of the state.
     #[inline]
-    const fn to_str(&self) -> &str {
+    pub const fn to_str(self) -> &'static str {
         match self {
             Self::Halt => "Halt",
             Self::A => "A",
