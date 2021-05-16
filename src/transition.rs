@@ -1,6 +1,10 @@
 use std::fmt::{self, Display};
+use std::ops::RangeInclusive;
+use rand::{thread_rng, Rng};
 
-/// Container for action to perform given a binary symbol
+use crate::utils::map_range_inclusive;
+
+/// Container for action to perform given a binary symbol.
 #[repr(transparent)]
 #[derive(Debug)]
 pub struct Transition {
@@ -10,7 +14,7 @@ pub struct Transition {
 }
 
 impl Transition {
-    /// Creates a new transition with the given actions
+    /// Creates a new transition with the given actions.
     #[inline]
     #[must_use]
     pub const fn new(action_on_0: Action, action_on_1: Action) -> Self {
@@ -19,7 +23,7 @@ impl Transition {
         }
     }
 
-    /// Returns the action corresponding to the given symbol
+    /// Returns the action corresponding to the given symbol.
     #[inline]
     #[must_use]
     pub fn get_action_of(&self, symbol: u8) -> (u8, Direction, State) {
@@ -34,15 +38,15 @@ impl Display for Transition {
     }
 }
 
-/// Container for partially specified actions
+/// Container for partially specified actions.
 #[repr(transparent)]
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Copy, Clone)]
 pub struct PartialTransition {
     actions: [Option<Action>; 2],
 }
 
 impl PartialTransition {
-    /// Creates a new partial transition
+    /// Creates a new partial transition.
     #[inline]
     #[must_use]
     pub const fn new(action_on_0: Option<Action>, action_on_1: Option<Action>) -> Self {
@@ -51,11 +55,13 @@ impl PartialTransition {
         }
     }
 
+    /// Sets action to perform when the given symbol is read.
     #[inline]
     pub fn set_action_of(&mut self, symbol: u8, action: Option<Action>) {
         self.actions[symbol as usize] = action;
     }
 
+    /// Returns action to perform when the given symbol is read.
     #[inline]
     #[must_use]
     pub fn get_action_of(&self, symbol: u8) -> Option<(u8, Direction, State)> {
@@ -63,8 +69,9 @@ impl PartialTransition {
     }
 }
 
+/// Encoded action to perform on a transition.
 #[repr(transparent)]
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Action {
     /// Packed representation of the action:
     /// Bit 0: Symbol to write on the tape
@@ -85,7 +92,7 @@ impl Action {
         }
     }
 
-    /// Unpacks the representation to return corresponding symbol to write, direction and state
+    /// Unpacks the representation to return corresponding symbol to write, direction and state.
     #[inline]
     #[must_use]
     fn unpack(&self) -> (u8, Direction, State) {
@@ -113,14 +120,27 @@ impl Display for Action {
 
 /// Direction in which to move the head
 #[repr(u8)]
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Direction {
+    /// Left direction
     Left,
+    /// Right direction
     Right,
 }
 
 impl Direction {
-    /// Converts the given variant to a `&str`
+    /// Returns a random direction.
+    ///
+    /// The distribution is uniform.
+    #[inline]
+    #[must_use]
+    pub fn random() -> Self {
+        let mut rng = thread_rng();
+
+        Self::from(rng.gen_range(0..=1))
+    }
+
+    /// Returns the string representation of the direction.
     #[inline]
     fn to_str(&self) -> &str {
         match self {
@@ -144,24 +164,52 @@ impl From<u8> for Direction {
     }
 }
 
+/// State of Turing machine
+///
+/// Considering the complexity of the problem there is only 7 possible non-halting states.
 #[repr(u8)]
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum State {
+    /// Halt state
     Halt,
+    /// A state
     A,
+    /// B state
     B,
+    /// C state
     C,
+    /// D state
+    D,
+    /// E state
+    E,
+    /// F state
+    F,
+    /// G state
+    G,
 }
 
 impl State {
-    /// Always starts in A state
+    /// Returns the starting state.
+    /// As the order of the state does not matter we always start in state A by
+    /// convention.
     #[inline]
     #[must_use]
     pub const fn start() -> Self {
         Self::A
     }
 
-    /// Converts the given variant to a `&str`
+    /// Returns a random state in the given range.
+    ///
+    /// The distribution is uniform.
+    #[inline]
+    #[must_use]
+    pub fn random(range: RangeInclusive<Self>) -> Self {
+        let mut rng = thread_rng();
+
+        Self::from(rng.gen_range(map_range_inclusive(range, |s| s as u8)))
+    }
+
+    /// Returns the string representation of the state.
     #[inline]
     fn to_str(&self) -> &str {
         match self {
@@ -169,13 +217,17 @@ impl State {
             Self::A => "A",
             Self::B => "B",
             Self::C => "C",
+            Self::D => "D",
+            Self::E => "E",
+            Self::F => "F",
+            Self::G => "G",
         }
     }
 }
 
 impl From<u8> for State {
-    #[must_use]
     #[inline]
+    #[must_use]
     fn from(state: u8) -> Self {
         debug_assert!(state < 4);
 
