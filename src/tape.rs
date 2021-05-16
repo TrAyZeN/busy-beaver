@@ -81,6 +81,13 @@ impl Tape {
         let positive_position = (-self.range.0 + position) as usize;
         (positive_position >> 6, (positive_position & 63) as u8)
     }
+
+    /// Counts the number of ones written on the tape.
+    #[inline]
+    #[must_use]
+    pub fn count_ones(&self) -> usize {
+        self.cells.iter().map(|c| c.count_ones() as usize).sum()
+    }
 }
 
 impl Default for Tape {
