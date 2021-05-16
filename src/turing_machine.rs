@@ -182,3 +182,72 @@ impl<const N: usize> Display for PartialTuringMachine<N> {
     }
 }
 
+pub fn generate_busy_beaver<const N: usize>(max_steps: usize) -> TuringMachine<N> {
+    let halting_action = Action::new(1, Direction::Right, State::Halt);
+    let mut rng = thread_rng();
+    let mut m = PartialTuringMachine::new([PartialTransition::default(); N]);
+
+    m.add_transition(State::A, 0, Action::new(1, Direction::Right, State::B));
+
+    if N >= 3 {
+        m.add_transition(
+            State::B,
+            0,
+            Action::new(rng.gen_range(0..=1), Direction::random(), State::C),
+        );
+    } else {
+        m.add_transition(
+            State::B,
+            0,
+            Action::new(
+                rng.gen_range(0..=1),
+                Direction::random(),
+                State::random(State::A..=State::B),
+            ),
+        );
+    }
+
+    loop {
+        println!("{}", m);
+        match m.run(max_steps) {
+            Ok(o) => {
+                println!("{:?}", o);
+                break;
+            }
+            Err((state, symbol)) => {
+                println!("yeah");
+                dbg!(m.is_n_state_full());
+                if m.is_n_state_full() && !m.is_0_dextrous_with(state, symbol, halting_action) {
+                    println!("endo");
+                    m.add_transition(state, symbol, halting_action);
+                    break;
+                }
+
+                let action = Action::new(
+                    rng.gen_range(0..=1),
+                    Direction::random(),
+                    State::random(State::A..=m.state_choice_limit()),
+                );
+                if !m.is_0_dextrous_with(state, symbol, action) {
+                    m.add_transition(state, symbol, action);
+                }
+
+                if m.count_specified_transitions() == 2 * N - 1 {
+                    for s in 0..N {
+                        if m.transitions[s].count_specified_actions() == 1 {
+                            if m.transitions[s].get_action_of(0).is_none() {
+                                m.add_transition(State::from(s as u8 + 1), 0, halting_action);
+                            } else {
+                                m.add_transition(State::from(s as u8 + 1), 1, halting_action);
+                            }
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+    }
+
+    m.into()
+}
