@@ -9,6 +9,8 @@
     clippy::cargo
 )]
 
+#![allow(clippy::inline_always)]
+
 /// Tape for binary alphabet Turing machine
 pub mod tape;
 

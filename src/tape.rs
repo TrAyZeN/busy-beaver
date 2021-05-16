@@ -1,7 +1,7 @@
 use crate::transition::Direction;
 use std::collections::VecDeque;
 
-/// A tape of binary-alphabet symbols
+/// A tape of binary-alphabet symbols.
 #[derive(Debug)]
 pub struct Tape {
     /// Bit vector representing the tape
@@ -26,6 +26,8 @@ impl Tape {
 
     /// Reads the symbol on the tape at the head position.
     #[inline]
+    #[must_use]
+    #[allow(clippy::cast_possible_truncation)]
     pub fn read(&self) -> u8 {
         let (cell_index, bit_index) = self.get_cell_bit_index(self.head);
 
@@ -34,7 +36,7 @@ impl Tape {
 
     /// Writes the given binary symbol at the head position.
     ///
-    /// # Panic
+    /// # Panics
     /// Panics in `debug` mode if symbol is not 0 or 1.
     #[inline]
     pub fn write(&mut self, symbol: u8) {
@@ -71,11 +73,21 @@ impl Tape {
     /// # Panic
     /// Panics in `debug` mode if index is out of range.
     #[inline]
+    #[must_use]
+    #[allow(clippy::cast_possible_truncation)]
     fn get_cell_bit_index(&self, position: isize) -> (usize, u8) {
         debug_assert!(self.range.0 <= position && position <= self.range.1);
 
         let positive_position = (-self.range.0 + position) as usize;
         (positive_position >> 6, (positive_position & 63) as u8)
+    }
+}
+
+impl Default for Tape {
+    #[inline(always)]
+    #[must_use]
+    fn default() -> Self {
+        Self::new()
     }
 }
 

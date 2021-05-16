@@ -64,8 +64,8 @@ impl PartialTransition {
     /// Returns action to perform when the given symbol is read.
     #[inline]
     #[must_use]
-    pub fn get_action_of(&self, symbol: u8) -> Option<(u8, Direction, State)> {
-        self.actions[symbol as usize].as_ref().map(|a| a.unpack())
+    pub fn get_action_of(self, symbol: u8) -> Option<(u8, Direction, State)> {
+        self.actions[symbol as usize].map(Action::unpack)
     }
 }
 
@@ -82,6 +82,9 @@ pub struct Action {
 
 impl Action {
     /// Creates a new action from the given direction and next state.
+    ///
+    /// # Panics
+    /// Panics in debug mode if `symbol >= 2`.
     #[inline]
     #[must_use]
     pub fn new(symbol: u8, direction: Direction, next_state: State) -> Self {
@@ -95,7 +98,7 @@ impl Action {
     /// Unpacks the representation to return corresponding symbol to write, direction and state.
     #[inline]
     #[must_use]
-    fn unpack(&self) -> (u8, Direction, State) {
+    fn unpack(self) -> (u8, Direction, State) {
         (
             self.representation & 1,
             Direction::from(self.representation >> 1 & 1),
@@ -142,7 +145,7 @@ impl Direction {
 
     /// Returns the string representation of the direction.
     #[inline]
-    fn to_str(&self) -> &str {
+    const fn to_str(&self) -> &str {
         match self {
             Self::Left => "Left",
             Self::Right => "Right",
@@ -211,7 +214,7 @@ impl State {
 
     /// Returns the string representation of the state.
     #[inline]
-    fn to_str(&self) -> &str {
+    const fn to_str(&self) -> &str {
         match self {
             Self::Halt => "Halt",
             Self::A => "A",
@@ -229,13 +232,17 @@ impl From<u8> for State {
     #[inline]
     #[must_use]
     fn from(state: u8) -> Self {
-        debug_assert!(state < 4);
+        debug_assert!(state <= 7);
 
         match state {
             0 => Self::Halt,
             1 => Self::A,
             2 => Self::B,
             3 => Self::C,
+            4 => Self::D,
+            5 => Self::E,
+            6 => Self::F,
+            7 => Self::G,
             _ => unreachable!(),
         }
     }
